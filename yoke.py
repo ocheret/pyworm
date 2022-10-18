@@ -14,7 +14,7 @@ class Yoke(object):
     - Reversible insert operations (e.g. a.InsertLeft(b); a.InsertLeft(b)
     done together is a no-op).
 
-    - >Commutative insert and append operations (i.e. a.InsertLeft(b)
+    - Commutative insert and append operations (i.e. a.InsertLeft(b)
     and b.InsertLeft(a) produce identical results).
 
     - The ability to splice together multiple doubly linked lists
@@ -30,11 +30,11 @@ class Yoke(object):
 
     ...->a->b->c->... (only showing right pointers)
 
-    and you invoke b.InsertLeft(yoke.New("x")) you get...
+    and you invoke b.InsertLeft(Yoke("x")) you get...
 
     ...->a->x->b->c->...
 
-    However, if you invoke b.InsertRight(yoke.New("x")) you get...
+    However, if you invoke b.InsertRight(Yoke("x")) you get...
 
     ...->a->b->x->c->...
 
@@ -42,12 +42,15 @@ class Yoke(object):
     the end elements)...
 
     a->b->c->d->e->a
+    ================
 
     p->q->r->s->t->p
+    ----------------
 
     and you do either a.InsertLeft(p) or p.InsertLeft(a), you get
 
     p->q->r->s->t->a->b->c->d->e->p
+    -------------  =============  _
 
     Invoking a.InsertLeft(p) again, or invoking p.InsertLeft(a)
     splits the long list back into the original 2 lists again.
@@ -76,7 +79,7 @@ class Yoke(object):
         self.left = self
         self.right = self
 
-    def insert_left(y, x):
+    def insert_left(self, x):
         """
         Inserts Yokes into each other's lists. This can be used to
         splice two lists together. The operation is also reversible.
@@ -99,18 +102,18 @@ class Yoke(object):
         Invoking a.InsertLeft(p) again, or invoking p.InsertLeft(a)
         splits the long list back into the original 2 lists again.
 
-        x the Yoke to insert in our list.  If x is None then nothing
+        x is the Yoke to insert in our list.  If x is None then nothing
         is done.
         """
         if x != None:
-            t = y.left
-            y.left.right = x
-            y.left = x.left
-            x.left.right = y
+            t = self.left
+            self.left.right = x
+            self.left = x.left
+            x.left.right = self
             x.left = t
-        return y
+        return self
 
-    def insert_right(y, x):
+    def insert_right(self, x):
         """
         Appends Yokes onto each other's lists. This can be used to splice two
         lists together. The operation is also reversible. Weird, huh?
@@ -137,17 +140,17 @@ class Yoke(object):
         nothing is done.
         """
         if x != None:
-            t = y.right
-            y.right.left = x
-            y.right = x.right
-            x.right.left = y
+            t = self.right
+            self.right.left = x
+            self.right = x.right
+            x.right.left = self
             x.right = t
-        return y
+        return self
 
-    def remove(y):
+    def remove(self):
         """Removes a Yoke from a list so it forms its own single element list."""
-        y.left.right = y.right
-        y.right.left = y.left
-        y.left = y
-        y.right = y
-        return y
+        self.left.right = self.right
+        self.right.left = self.left
+        self.left = self
+        self.right = self
+        return self
