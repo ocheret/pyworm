@@ -11,25 +11,31 @@ class WormState(object):
         self.worm = yoke.Yoke(None)         # Sentinel node for linked list
         headXY = (width // 2, height // 2)  # Start with the worm's head at the center
         self.worm.insert_left(yoke.Yoke(headXY))
-        self.grow_count = 0                 # Start moving to the right
+        self.grow_count = 4                 # Start moving to the right
+        self.score = 0
 
     def next_step(self):
         x, y = self.worm.left.value
         x += self.dx
         y += self.dy
+        self.worm.insert_left(yoke.Yoke((x, y)))
+        old_xy = None
+        if self.grow_count == 0:
+            w = self.worm.right
+            w.remove()
+            old_xy = w.value
+        else:
+            self.grow_count -= 1
+        return old_xy
 
     def go_right(self):
         self.dx, self.dy = 1, 0
-        self.next_step()
 
     def go_left(self):
         self.dx, self.dy = -1, 0
-        self.next_step()
 
     def go_down(self):
         self.dx, self.dy = 0, 1
-        self.next_step()
 
     def go_up(self):
         self.dx, self.dy = 0, -1
-        self.next_step()
