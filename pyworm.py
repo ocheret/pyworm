@@ -12,3 +12,5 @@ if __name__ == "__main__":
 
     # Start the game loop
     worm_interface.run()
+
+    print("Bye!")
