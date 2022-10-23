@@ -67,23 +67,25 @@ class WormCurses(object):
         except curses.error:
             pass
 
+    def draw_target(self):
+        x = self.state.target_x
+        self.play_area.addch(self.state.target_y, self.state.target_x,
+             str(self.state.target_value))
+
     def draw_worm_full(self):
         w = self.state.worm.left
         c = '@'
         while w != self.state.worm:
-            x, y = w.value
-            self.safe_addch(y, x, c)
+            self.safe_addch(w.y, w.x, c)
             c = 'o'
             w = w.left
 
     def draw_worm_update(self, old_xy):
         w = self.state.worm.left
-        x, y = w.value
-        self.safe_addch(y, x, '@')
+        self.safe_addch(w.y, w.x, '@')
         w = w.left
         if w != self.state.worm:
-            x, y = w.value
-            self.safe_addch(y, x, 'o')
+            self.safe_addch(w.y, w.x, 'o')
         if (old_xy != None):
             x, y = old_xy
             self.safe_addch(y, x, ' ')
@@ -100,6 +102,7 @@ class WormCurses(object):
 
     def next_step(self):
         old_xy = self.state.next_step()
+        self.draw_target()
         self.draw_worm_update(old_xy)
         self.draw_status(f"Iterations {self.counter}.")
         self.counter += 1
@@ -109,6 +112,7 @@ class WormCurses(object):
     def draw_all(self):
         self.draw_static_content()
         self.stdscr.refresh()
+        self.draw_target()
         self.draw_worm_full()
         self.play_area.refresh()
 
