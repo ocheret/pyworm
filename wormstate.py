@@ -38,24 +38,27 @@ class WormState(object):
         tv = self.prng.randint(1, 9)
 
         # Keep trying to generate a target that doesn't collide with worm
-        while True:
+        still_searching = True
+        while still_searching:
             # Generate a random, x and y for the target
             tx = self.prng.randint(0, self.width - 1)
             ty = self.prng.randint(0, self.height - 1)
 
             # Make sure no elements in the worm collide with the position
             w = self.worm.left
+            still_searching = False
             while w != self.worm:
                 if tx == w.x and ty == w.y:
                     # We have a conflict. Generate another
+                    still_searching = True
                     break
                 w = w.left
             
-            # No collisions with worm. Safe to use generated target
-            self.target_x = tx
-            self.target_y = ty
-            self.target_value = tv
-            return
+        # No collisions with worm. Safe to use generated target
+        self.target_x = tx
+        self.target_y = ty
+        self.target_value = tv
+        return
 
     def next_step(self):
         # Get the position of the current head and figure out new position
@@ -81,6 +84,7 @@ class WormState(object):
         # If head has hit the target add to grow count and generate new target
         if self.target_x == head.x and self.target_y == head.y:
             self.grow_count += self.target_value
+            self.score += self.target_value
             self.generate_target()
 
         return old_xy
