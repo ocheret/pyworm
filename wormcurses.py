@@ -12,7 +12,7 @@ The screen will be divided into the following areas:
 |                                Play area                                    |
 |                                                                             |
 +-----------------------------------------------------------------------------+
-                    Comments: xxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+                    Comments: xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 """
 
 # Constants that can be used in a match statement
@@ -26,6 +26,8 @@ keys.KEY_k = ord('k')
 keys.KEY_K = ord('K')
 keys.KEY_l = ord('l')
 keys.KEY_L = ord('L')
+keys.KEY_n = ord('n')
+keys.KEY_N = ord('N')
 keys.KEY_q = ord('q')
 keys.KEY_Q = ord('Q')
 keys.KEY_CTRL_L = ord('L') - 64
@@ -72,6 +74,9 @@ class WormCurses(object):
         self.play_area.addch(self.state.target_y, self.state.target_x,
              str(self.state.target_value))
 
+    def draw_grow_by(self):
+        self.stdscr.addstr(0, 10, str(self.state.grow_count))
+
     def draw_score(self):
         self.stdscr.addstr(0, self.maxx - 5, str(self.state.score).ljust(4))
 
@@ -104,25 +109,35 @@ class WormCurses(object):
             pass
 
     def next_step(self):
-        old_xy = self.state.next_step()
-        self.draw_target()
-        self.draw_worm_update(old_xy)
-        self.draw_score()
-        self.draw_status(f"Iterations {self.counter}.")
-        self.counter += 1
-        self.play_area.refresh()
-        self.stdscr.refresh()
+        (old_xy, status) = self.state.next_step()
+        if status != None:
+            if old_xy != None:
+                (x, y) = old_xy
+                x = max(x, 0)
+                y = max(y, 0)
+                self.play_area.addch(y, x, 'X')
+                self.play_area.refresh()
+            self.draw_status(status + ": Hit 'N' to start a new game")
+        else:
+            self.draw_target()
+            self.draw_worm_update(old_xy)
+            self.draw_grow_by()
+            self.draw_score()
+            self.counter += 1
+            self.play_area.refresh()
+            self.stdscr.refresh()
 
     def draw_all(self):
         self.draw_static_content()
+        self.draw_grow_by()
         self.draw_score()
         self.stdscr.refresh()
         self.draw_target()
         self.draw_worm_full()
         self.play_area.refresh()
- 
+
     def reset_all(self):
-        # Get the size of the total screen 
+        # Get the size of the total screen
         (self.maxy, self.maxx) = self.stdscr.getmaxyx()
 
         # The first line of the screen will hold the score and growth count
@@ -146,26 +161,33 @@ class WormCurses(object):
             self.reset_all()
             while True:
                 ch = self.stdscr.getch()
-                match ch:
-                    case keys.TIMEOUT:
-                        self.next_step()
-                    case keys.KEY_h | keys.KEY_H | curses.KEY_LEFT:
-                        self.state.go_left()
-                        self.next_step()
-                    case keys.KEY_j | keys.KEY_J | curses.KEY_DOWN:
-                        self.state.go_down()
-                        self.next_step()
-                    case keys.KEY_k | keys.KEY_K | curses.KEY_UP:
-                        self.state.go_up()
-                        self.next_step()
-                    case keys.KEY_l | keys.KEY_L | curses.KEY_RIGHT:
-                        self.state.go_right()
-                        self.next_step()
-                    case keys.KEY_CTRL_L | curses.KEY_REFRESH:
-                        self.draw_all()
-                    case keys.KEY_q | keys.KEY_Q:
-                        return
-                    case _:
-                        self.draw_status(f"Key is {ch}")
+                if self.state.game_over:
+                    match ch:
+                        case keys.KEY_n | keys.KEY_N:
+                            self.reset_all()
+                        case _:
+                            continue
+                else:
+                    match ch:
+                        case keys.TIMEOUT:
+                            self.next_step()
+                        case keys.KEY_h | keys.KEY_H | curses.KEY_LEFT:
+                            self.state.go_left()
+                            self.next_step()
+                        case keys.KEY_j | keys.KEY_J | curses.KEY_DOWN:
+                            self.state.go_down()
+                            self.next_step()
+                        case keys.KEY_k | keys.KEY_K | curses.KEY_UP:
+                            self.state.go_up()
+                            self.next_step()
+                        case keys.KEY_l | keys.KEY_L | curses.KEY_RIGHT:
+                            self.state.go_right()
+                            self.next_step()
+                        case keys.KEY_CTRL_L | curses.KEY_REFRESH:
+                            self.draw_all()
+                        case keys.KEY_q | keys.KEY_Q:
+                            return
+                        case _:
+                            self.draw_status(f"Key is {ch}")
         finally:
             self.teardown_curses()

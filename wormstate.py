@@ -33,6 +33,9 @@ class WormState(object):
         # Generate a target number for the worm to eat
         self.generate_target()
 
+        # Ready to play
+        self.game_over = False
+
     def generate_target(self):
         # Generate a number between 1 and 9 for the target
         tv = self.prng.randint(1, 9)
@@ -53,7 +56,7 @@ class WormState(object):
                     still_searching = True
                     break
                 w = w.left
-            
+
         # No collisions with worm. Safe to use generated target
         self.target_x = tx
         self.target_y = ty
@@ -61,10 +64,27 @@ class WormState(object):
         return
 
     def next_step(self):
+        # Make sure we're still playing
+        if self.game_over:
+            return (None, "Game Over!")
+
         # Get the position of the current head and figure out new position
         w = self.worm.left
         x = w.x + self.dx
         y = w.y + self.dy
+
+        # See if we ran into a wall
+        if x < 0 or x >= self.width or y < 0 or y >= self.height:
+            self.game_over = True
+            return ((x, y), "You ran into a wall!")
+
+        # See if the worm ran into itself
+        w = self.worm.left
+        while w != self.worm:
+            if x == w.x and y == w.y:
+                self.game_over = True
+                return ((x, y), "The worm ran into itself!")
+            w = w.left
 
         # Create a new head and put it at the head of the list
         head = yoke.Yoke()
@@ -80,14 +100,14 @@ class WormState(object):
             old_xy = (tail.x, tail.y)
         else:
             self.grow_count -= 1
-        
+
         # If head has hit the target add to grow count and generate new target
         if self.target_x == head.x and self.target_y == head.y:
             self.grow_count += self.target_value
             self.score += self.target_value
             self.generate_target()
 
-        return old_xy
+        return (old_xy, None)
 
     def go_right(self):
         self.dx, self.dy = 1, 0
