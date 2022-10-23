@@ -74,8 +74,7 @@ class Yoke(object):
     lists.  Magic.
     """
 
-    def __init__(self, value):
-        self.value = value
+    def __init__(self):
         self.left = self
         self.right = self
 
