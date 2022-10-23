@@ -54,7 +54,7 @@ class WormCurses(object):
 
         # Draw header row labels
         self.stdscr.addstr(0, 1, "Grow By:")
-        self.stdscr.addstr(0, self.maxx - 11, "Score:")
+        self.stdscr.addstr(0, self.maxx - 12, "Score:")
 
         # Draw a border around the play area
         border_area = self.stdscr.subwin(self.maxy - 2, self.maxx, 1, 0)
@@ -71,6 +71,9 @@ class WormCurses(object):
         x = self.state.target_x
         self.play_area.addch(self.state.target_y, self.state.target_x,
              str(self.state.target_value))
+
+    def draw_score(self):
+        self.stdscr.addstr(0, self.maxx - 5, str(self.state.score).ljust(4))
 
     def draw_worm_full(self):
         w = self.state.worm.left
@@ -104,6 +107,7 @@ class WormCurses(object):
         old_xy = self.state.next_step()
         self.draw_target()
         self.draw_worm_update(old_xy)
+        self.draw_score()
         self.draw_status(f"Iterations {self.counter}.")
         self.counter += 1
         self.play_area.refresh()
@@ -111,11 +115,12 @@ class WormCurses(object):
 
     def draw_all(self):
         self.draw_static_content()
+        self.draw_score()
         self.stdscr.refresh()
         self.draw_target()
         self.draw_worm_full()
         self.play_area.refresh()
-
+ 
     def reset_all(self):
         # Get the size of the total screen 
         (self.maxy, self.maxx) = self.stdscr.getmaxyx()
