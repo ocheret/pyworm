@@ -138,7 +138,7 @@ class WormCurses(object):
                         x = max(x, 0)
                         y = max(y, 0)
                         self.play_area.addch(y, x, 'X')
-                    self.status = status + ": Hit 'N' for a new game or Q to quit"
+                    self.status = status + ": Hit 'N' for new game or Q to quit"
                     self.draw_status()
                     return
                 else:
