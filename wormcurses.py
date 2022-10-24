@@ -43,11 +43,13 @@ class WormCurses(object):
         curses.start_color()
         curses.noecho()
         curses.cbreak()
+        curses.curs_set(0)
         self.stdscr.keypad(True)
         self.stdscr.timeout(1000)
 
     def teardown_curses(self):
         self.stdscr.keypad(False)
+        curses.curs_set(1)
         curses.nocbreak()
         curses.echo()
         curses.endwin()
@@ -100,13 +102,13 @@ class WormCurses(object):
             x, y = old_xy
             self.safe_addch(y, x, ' ')
 
-    def draw_status(self, status):
+    def draw_status(self):
         try:
             y = self.maxy - 1
-            x = (self.maxx - len(status)) // 2
+            x = (self.maxx - len(self.status)) // 2
             self.stdscr.move(y, 0)
             self.stdscr.deleteln()
-            self.stdscr.addstr(y, x, status)
+            self.stdscr.addstr(y, x, self.status)
         except curses.error:
             pass
 
@@ -119,13 +121,15 @@ class WormCurses(object):
                 y = max(y, 0)
                 self.play_area.addch(y, x, 'X')
                 self.play_area.refresh()
-            self.draw_status(status +
-                ": Hit 'N' to start a new game or Q to quit")
+            self.status = status + ": Hit 'N' for a new game or Q to quit"
+            self.draw_status()
+            self.stdscr.refresh()
         else:
             self.draw_target()
             self.draw_worm_update(old_xy)
             self.draw_grow_by()
             self.draw_score()
+            self.draw_status()
             self.counter += 1
             self.play_area.refresh()
             self.stdscr.refresh()
@@ -134,6 +138,7 @@ class WormCurses(object):
         self.draw_static_content()
         self.draw_grow_by()
         self.draw_score()
+        self.draw_status()
         self.stdscr.refresh()
         self.draw_target()
         self.draw_worm_full()
@@ -153,6 +158,9 @@ class WormCurses(object):
         self.play_maxx = self.maxx - 2  # account for border on both sides
         self.play_maxy = self.maxy - 4  # account for border, header, and footer
         self.state.reset(width = self.maxx - 2, height = self.maxy - 4)
+
+        # No status to report
+        self.status = ""
 
         # Draw everything
         self.draw_all()
@@ -176,12 +184,16 @@ class WormCurses(object):
                 elif self.paused:
                     match ch:
                         case keys.KEY_p | keys.KEY_P:
+                            self.status = ""
                             self.paused = False
+                            self.draw_status()
+                            self.stdscr.refresh()
                         case keys.KEY_q | keys.KEY_Q:
                             return
                         case _:
                             continue
                 else:
+                    self.status = ""
                     match ch:
                         case keys.TIMEOUT:
                             self.next_step()
@@ -202,9 +214,11 @@ class WormCurses(object):
                         case keys.KEY_q | keys.KEY_Q:
                             return
                         case keys.KEY_p | keys.KEY_P:
-                            self.draw_status("Paused: Hit P to continue")
+                            self.status = "Paused: Hit P to continue"
+                            self.draw_status()
+                            self.stdscr.refresh()
                             self.paused = True
                         case _:
-                            self.draw_status(f"Key is {ch}")
+                            pass
         finally:
             self.teardown_curses()
