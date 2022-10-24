@@ -1,4 +1,6 @@
 import curses
+import random
+import time
 import types
 
 import wormstate
@@ -34,9 +36,18 @@ keys.KEY_q = ord('q')
 keys.KEY_Q = ord('Q')
 keys.KEY_CTRL_L = ord('L') - 64
 
+worm_quotes = [
+    "Yum!", "Delicious!", "I want MORE!", "Tasty!", "I'm still hungry!",
+    "Keep feeding me!", "I can't get enough!",
+    "Does this screen make me look fat?", "You spoil me!",
+    "My compliments to the chef!"
+]
+worm_max_quote = len(worm_quotes) - 1
+
 class WormCurses(object):
     def set_state(self, state: wormstate.WormState):
         self.state = state
+        self.prng = random.Random(time.time())
 
     def setup_curses(self):
         self.stdscr = curses.initscr()
@@ -129,6 +140,9 @@ class WormCurses(object):
             self.draw_worm_update(old_xy)
             self.draw_grow_by()
             self.draw_score()
+            if self.old_grow_count < self.state.grow_count:
+                self.status = worm_quotes[self.prng.randint(0, worm_max_quote)]
+            self.old_grow_count = self.state.grow_count
             self.draw_status()
             self.counter += 1
             self.play_area.refresh()
@@ -161,6 +175,9 @@ class WormCurses(object):
 
         # No status to report
         self.status = ""
+
+        # Remember the grow count so we can tell whenever it increases
+        self.old_grow_count = self.state.grow_count
 
         # Draw everything
         self.draw_all()
