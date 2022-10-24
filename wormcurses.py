@@ -28,6 +28,8 @@ keys.KEY_l = ord('l')
 keys.KEY_L = ord('L')
 keys.KEY_n = ord('n')
 keys.KEY_N = ord('N')
+keys.KEY_p = ord('p')
+keys.KEY_P = ord('P')
 keys.KEY_q = ord('q')
 keys.KEY_Q = ord('Q')
 keys.KEY_CTRL_L = ord('L') - 64
@@ -117,7 +119,8 @@ class WormCurses(object):
                 y = max(y, 0)
                 self.play_area.addch(y, x, 'X')
                 self.play_area.refresh()
-            self.draw_status(status + ": Hit 'N' to start a new game")
+            self.draw_status(status +
+                ": Hit 'N' to start a new game or Q to quit")
         else:
             self.draw_target()
             self.draw_worm_update(old_xy)
@@ -156,6 +159,7 @@ class WormCurses(object):
 
     def run(self):
         self.counter = 0
+        self.paused = False
         try:
             self.setup_curses()
             self.reset_all()
@@ -165,6 +169,16 @@ class WormCurses(object):
                     match ch:
                         case keys.KEY_n | keys.KEY_N:
                             self.reset_all()
+                        case keys.KEY_q | keys.KEY_Q:
+                            return
+                        case _:
+                            continue
+                elif self.paused:
+                    match ch:
+                        case keys.KEY_p | keys.KEY_P:
+                            self.paused = False
+                        case keys.KEY_q | keys.KEY_Q:
+                            return
                         case _:
                             continue
                 else:
@@ -187,6 +201,9 @@ class WormCurses(object):
                             self.draw_all()
                         case keys.KEY_q | keys.KEY_Q:
                             return
+                        case keys.KEY_p | keys.KEY_P:
+                            self.draw_status("Paused: Hit P to continue")
+                            self.paused = True
                         case _:
                             self.draw_status(f"Key is {ch}")
         finally:
