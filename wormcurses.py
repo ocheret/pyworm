@@ -41,6 +41,7 @@ keys.KEY_CTRL_L = ord('L') - 64
 keys.KEY_SDOWN = 336
 keys.KEY_SUP = 337
 
+# Every time the worm eats a number it says a random phrase from this list
 worm_quotes = [
     "Yum!", "Delicious!", "I want MORE!", "Tasty!", "I'm still hungry!",
     "Keep feeding me!", "I can't get enough!",
@@ -50,11 +51,17 @@ worm_quotes = [
 worm_max_quote = len(worm_quotes) - 1
 
 class WormCurses(object):
+    """
+    A curses user interface for the game of worm
+    """
     def set_state(self, state: wormstate.WormState):
         self.state = state
         self.prng = random.Random(time.time())
 
     def setup_curses(self):
+        """
+        Setup all features of curses we want for this application.
+        """
         self.stdscr = curses.initscr()
         curses.start_color()
         curses.noecho()
@@ -64,6 +71,11 @@ class WormCurses(object):
         self.stdscr.timeout(1000)
 
     def teardown_curses(self):
+        """
+        Return the terminal to the pre-curses state. If this doesn't get
+        called the user should be able to type 'stty sane' to reset the
+        terminal.
+        """
         self.stdscr.keypad(False)
         curses.curs_set(1)
         curses.nocbreak()
@@ -71,6 +83,9 @@ class WormCurses(object):
         curses.endwin()
 
     def draw_static_content(self):
+        """
+        Draw all of the content that shouldn't change at all during the game
+        """
         # Clear the entire screen
         self.stdscr.clear()
 
@@ -84,23 +99,30 @@ class WormCurses(object):
         self.stdscr.noutrefresh()
 
     def safe_addch(self, y, x, c):
+        """
+        Wraps the curses addch method which will throw an exception when
+        writing to the lower right corner of the screen
+        """
         try:
             self.play_area.addch(y, x, c)
         except curses.error:
             pass
 
     def draw_target(self):
-        x = self.state.target_x
+        """ Draw the random target number on the screen."""
         self.play_area.addch(self.state.target_y, self.state.target_x,
              str(self.state.target_value))
 
     def draw_grow_by(self):
+        """ Draw the 'grow by' value on the screen."""
         self.stdscr.addstr(0, 10, str(self.state.grow_count))
 
     def draw_score(self):
+        """ Draw the score value on the screen. """
         self.stdscr.addstr(0, self.maxx - 5, str(self.state.score).ljust(4))
 
     def draw_worm_full(self):
+        """ Draw the entire worm on the screen. """
         w = self.state.worm.left
         c = '@'
         while w != self.state.worm:
@@ -109,6 +131,11 @@ class WormCurses(object):
             w = w.left
 
     def draw_worm_update(self, old_xy):
+        """
+        Efficiently animate a single step of the worm by only drawing the
+        new head, overwriting the old head, and if necessary, erase the
+        old tail.
+        """
         w = self.state.worm.left
         self.safe_addch(w.y, w.x, '@')
         w = w.left
@@ -119,6 +146,7 @@ class WormCurses(object):
             self.safe_addch(y, x, ' ')
 
     def draw_status(self):
+        """ Draw the status line. """
         try:
             y = self.maxy - 1
             x = (self.maxx - len(self.status)) // 2
@@ -129,6 +157,10 @@ class WormCurses(object):
             pass
 
     def next_step(self, n):
+        """
+        Advance the state of the game by n steps. If we hit a target number,
+        the wall, or the worm, we stop advancing.
+        """
         try:
             for i in range(n):
                 (old_xy, status) = self.state.next_step()
@@ -157,6 +189,7 @@ class WormCurses(object):
             self.stdscr.refresh()
 
     def draw_all(self):
+        """ Redraw everything on the screen (completely refresh). """
         self.draw_static_content()
         self.draw_grow_by()
         self.draw_score()
@@ -167,6 +200,7 @@ class WormCurses(object):
         self.play_area.refresh()
 
     def reset_all(self):
+        """ Reset all state to start a new game. """
         # Get the size of the total screen
         (self.maxy, self.maxx) = self.stdscr.getmaxyx()
 
@@ -191,6 +225,7 @@ class WormCurses(object):
         self.draw_all()
 
     def run(self):
+        """ Main game loop. """
         self.counter = 0
         self.paused = False
         try:

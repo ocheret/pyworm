@@ -3,7 +3,15 @@ import time
 import yoke
 
 class WormState(object):
+    """
+    This class encapsulates the state of a game of worm.
+    """
+
     def reset(self, width: int, height: int):
+        """
+        Starts a new game with a specific with and height
+        """
+
         # Size of the play area
         self.width = width
         self.height = height
@@ -37,6 +45,10 @@ class WormState(object):
         self.game_over = False
 
     def generate_target(self):
+        """
+        Generates a random number between 1 and 9 in a screen location
+        that isn't occupied by the worm.
+        """
         # Generate a number between 1 and 9 for the target
         tv = self.prng.randint(1, 9)
 
@@ -64,6 +76,9 @@ class WormState(object):
         return
 
     def next_step(self):
+        """
+        Advances the game by a single step
+        """
         # Make sure we're still playing
         if self.game_over:
             return (None, "Game Over!")
@@ -110,13 +125,17 @@ class WormState(object):
         return (old_xy, None)
 
     def go_right(self):
+        """Set the new direction to right"""
         self.dx, self.dy = 1, 0
 
     def go_left(self):
+        """Set the new direction to left"""
         self.dx, self.dy = -1, 0
 
     def go_down(self):
+        """Set the new direction to down"""
         self.dx, self.dy = 0, 1
 
     def go_up(self):
+        """Set the new direction to up"""
         self.dx, self.dy = 0, -1
